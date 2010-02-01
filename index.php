@@ -7,14 +7,14 @@ define(TRSS_VERSION, '0.1.0');
 require_once("markdown.php");
 
 # Check for valid input
-$tumblr_url = isset($_REQUEST['tumblr']) && !empty($_REQUEST['tumblr']) ? $_REQUEST['tumblr'] : '';
+$tumblr = isset($_REQUEST['tumblr']) && !empty($_REQUEST['tumblr']) ? $_REQUEST['tumblr'] : '';
 
-if(empty($username)): ?>
+if(empty($tumblr)): ?>
 <!DOCTYPE html>
 <html lang="en">
 	<head>
 	    <meta charset="utf-8">
-		<title>Tumblfeed: Better RSS for Tumblr Blogs</title>
+		<title>Tumblfeed: Better Feeds for Tumblr Blogs</title>
 		<!-- <link rel="stylesheet" href="t2w.css" type="text/css"> -->
 	</head>
 	<body>
@@ -30,8 +30,7 @@ if(empty($username)): ?>
 			<dt>License</dt>
 			<dd><a rel="license" href="http://www.gnu.org/licenses/gpl.html">GPL v3</a></dd>
 			<dt>Source Code</dt>
-			<dd><a href="http://github.com/benward/tumblfeed">
-			    github.com/benward/tumblr2wordpress</a></dd>
+			<dd><a href="http://github.com/benward/tumblfeed">github.com/benward/tumblfeed</a></dd>
 		</dl>
 		<p>This tool reads posts from a Tumblr blog you specify, and outputs
 		    an Atom feed of the content with full, rich HTML mark-up. Native RSS
@@ -137,12 +136,14 @@ function removeWeirdChars($str) {
 }
 
 function getTags($post) {
+    global $tumblr;
+
 	if($post->attributes()->type) {
 		echo "        <category scheme=\"$tumblr\" term=\"" .$post->attributes()->type . "\"/>\n";
 	}
 	if($post->tag) {
 		foreach($post->tag as $tag) {
-			echo "        <category domain=\"$tumblr\" term=\"" . removeWeirdChars($tag) . "\"/>\n";
+			echo "        <category scheme=\"$tumblr\" term=\"" . removeWeirdChars($tag) . "\"/>\n";
 		}
 	}
 }
@@ -198,13 +199,20 @@ header('content-type: application/atom+xml');
 <?php echo "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n"; ?>
 <!-- generator="Tumblr2WordPress/<?php echo T2W_VERSION ?>" created="<?php echo date("Y-m-d H:i") ?>"-->
 <feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
+    <?php if(!empty($feed->tumblelog->attributes()->cname)) {
+        $blog_url = $feed->tumblelog->attributes()->cname;
+    }
+    else {
+        $blog_url = $feed->tumblelog->attributes()->name . ".tumblr.com";
+    }?>
+
     <title><?php echo $feed->tumblelog->attributes()->title ?></title>
-	<link rel="alternate" type="text/html" href="http://<?php echo $feed->tumblelog->attributes()->cname ?>"/>
+	<link rel="alternate" type="text/html" href="http://<?php echo $blog_url ?>"/>
     <!-- <link rel="self" type="application/atom+xml" href="http://benward.me/feed/atom" /> -->
     <link rel="hub" href="http://tumblr.superfeedr.com/"/>
-    <id>http://<?php echo $feed->tumblelog->attributes()->cname ?>/rss</id>
-	<updated><?php echo date("c", (double)$posts[0]->attributes()->{'unix-timestamp'}) ?>+0000) ?></updated>
-	<generator uri="http://github.com/benward/tumblfeed">Tumblfeed/<?php echo TRSS_VERSION . '(' . $_SERVER['HTTP_HOST'] . ')' ?></generator>
+    <id>http://<?php echo $blog_url ?>/rss</id>
+	<updated><?php echo date("c", (double)$posts[0]->attributes()->{'unix-timestamp'}) ?></updated>
+	<generator uri="http://github.com/benward/tumblfeed">Tumblfeed/<?php echo TRSS_VERSION . ' (' . $_SERVER['HTTP_HOST'] . ')' ?></generator>
 <?php
     ob_start();
 	foreach($posts as $post) {
@@ -219,7 +227,7 @@ header('content-type: application/atom+xml');
 		<author>
 		    <name><![CDATA[<?php echo $feed->tumblelog->attributes()->name ?>]]></name>
 		</author>
-		<?php getTags($post) ?>
+<?php getTags($post) ?>
 <?php
         // Post Specific Elements:
 		switch($post->attributes()->type) {
@@ -282,6 +290,7 @@ header('content-type: application/atom+xml');
 			case "audio":
 			$post_content = $post->{'audio-caption'};
 			$audio_file = preg_match('/audio_file=([\S\s]*?)(&|")/', $post->{'audio-player'}, $matches);
+			echo "<!-- {$matches[1]} -->\n";
 		?>
 	 	<title type="html"><![CDATA[<?php echo htmlspecialchars(formatEntryTitle(&$post_content)) ?>]]></title>
 		<content type="html"><![CDATA[<?php if(isTumblrHostedMedia($matches[1])) {
