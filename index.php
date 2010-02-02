@@ -258,10 +258,31 @@ header('content-type: application/atom+xml');
 
 			case "photo":
 			$post_content = $post->{'photo-caption'};
+
+			$image = "";
+
+			# Handle photosets vs. single photos
+			# HTML5 `figure` is unstable, so just use class names on HTML4 now.
+			if(isset($post->photoset)) {
+			    foreach($post->xpath('photoset//photo') as $photo) {
+			        $image .= <<<FIGURE
+		        <div class="figure">
+		            <img src="{$photo->{'photo-url'}}" alt="">
+		            <p class="legend">{$photo->attributes()->caption}</p>
+		        </div>\n\n
+FIGURE;
+			    }
+			}
+			else {
+			    $image = <<<FIGURE
+		        <div class="figure">
+		            <img src="{$post->{'photo-url'}}" alt="">
+		        </div>\n\n
+FIGURE;
+			}
 			?>
 	 	<title type="html"><![CDATA[<?php echo htmlspecialchars(formatEntryTitle(&$post_content)) ?>]]></title>
-		<content type="html"><![CDATA[<img src="<?php echo $post->{'photo-url'} ?>" alt="">
-
+		<content type="html"><![CDATA[<?php echo $image; ?>
 		<?php echo Markdown($post_content) ?>]]></content>
 <?php       break;
 
