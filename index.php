@@ -265,12 +265,12 @@ header('content-type: application/atom+xml');
 			# HTML5 `figure` is unstable, so just use class names on HTML4 now.
 			if(isset($post->photoset)) {
 			    foreach($post->xpath('photoset//photo') as $photo) {
-			        $image .= <<<FIGURE
-		        <div class="figure">
-		            <img src="{$photo->{'photo-url'}}" alt="">
-		            <p class="legend">{$photo->attributes()->caption}</p>
-		        </div>\n\n
-FIGURE;
+			        $image .= "\n\t\t\t<div class=\"figure\">\n";
+			        $image .= "\t\t\t\t<img src=\"{$photo->{'photo-url'}}\" alt=\"\">\n";
+		            if(!empty($photo->attributes()->caption)) {
+		                $image .= "\t\t\t\t<p class=\"legend\">{$photo->attributes()->caption}</p>\n";
+		            }
+		            $image .= "\t\t\t</div>\n";
 			    }
 			}
 			else {
@@ -283,7 +283,7 @@ FIGURE;
 			?>
 	 	<title type="html"><![CDATA[<?php echo htmlspecialchars(formatEntryTitle(&$post_content)) ?>]]></title>
 		<content type="html"><![CDATA[<?php echo $image; ?>
-		<?php echo Markdown($post_content) ?>]]></content>
+		    <?php echo Markdown($post_content) ?>]]></content>
 <?php       break;
 
 			case "quote":
