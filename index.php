@@ -171,6 +171,15 @@ function formatEntryTitle(&$text, $strip=true) {
             # Crudely check for <a>
             $contains_link = !(false === stripos('<a', $l));
 
+            if( true === $strip
+                && false === $contains_link) {
+                # If there has been no other content so far (allowing one block
+                # for quote attribution), and we're stripping titles out of the
+                # text to avoid duplication, do it:
+                array_splice($lines, $i, 1);
+                $text = implode("\n", $lines);
+            }
+
             # In the final return, strip not-inline HTML tags.
             return str_replace('\n', '', strip_tags($l));
             #'<abbr><acronym><i><b><strong><em><code><kbd><samp><span><q>
