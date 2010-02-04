@@ -94,7 +94,16 @@ try {
 
     if(200 != $curl_info['http_code']) {
         # Some kind of error. Just debug output for now:
-        header("500", true, 500);
+
+        if(404 == $curl_info['http_code']) {
+            header("404", true, 404);
+        }
+        else if(503 == $curl_info['http_code']) {
+            header("503", true, 503);
+        }
+        else {
+            header("404", true, 404);
+        }
         echo "<title>Tumblr2Wordpress Error</title>\n";
         echo "<h1>Tumblr API Request Failed</h1>\n";
         echo "<p>Requesting a set of posts from the Tumblr API failed.
