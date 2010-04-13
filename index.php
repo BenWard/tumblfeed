@@ -287,9 +287,9 @@ header('content-type: application/atom+xml');
 		    case "conversation": ?>
 	 	<title type="html"><![CDATA[<?php echo htmlspecialchars(strip_tags($post->{'conversation-title'})) ?>]]></title>
 		<content type="html"><![CDATA[<?php
-		    foreach($post->{'conversation-line'} as $line) {
+		    foreach($post->conversation->line as $line) {
 		        ?><cite><?php
-		            echo preg_replace('/(<\/?p>|\n)/', '', Markdown($line->attributes()->label));
+		            echo $line->attributes()->name;
 		        ?></cite>: <q><?php
 		            echo preg_replace('/(<\/?p>|\n)/', '', Markdown($line));
 		        ?></q><br>
